@@ -400,18 +400,28 @@
 const moveToViewSelector = Tools.getShortcutSelector( ['Ctrl+Alt+V', 'Ctrl+Meta+V']);
 const saveSelector = Tools.getShortcutSelector( ['Ctrl+Alt+S', 'Ctrl+Meta+S', 'Ctrl+S', 'Meta+S']);
 
-function handleGlobalKeydown(e: KeyboardEvent) {
-    if (moveToViewSelector(e)) {
-        console.log(`navigating to view for id:>${id}<`);
-        e.preventDefault();
-        push(`/view/${id}`);
-    }
-    if (saveSelector(e)) {
-        console.log(`saving note for id:>${id}<`);
-        e.preventDefault();
-        save();
-    }
-}
+const shortcuts = Tools.setShortcuts(
+    [
+        { shortcuts: ['Ctrl+Alt+V', 'Ctrl+Meta+V'], callback: () => {
+            console.log(`navigating to view for id:>${id}<`);
+            push(`/view/${id}`);
+        } },
+        { shortcuts: ['Ctrl+Alt+S', 'Ctrl+Meta+S', 'Ctrl+S', 'Meta+S'], callback: () => {
+            console.log(`saving note for id:>${id}<`);
+            save();
+        } },
+        { shortcuts: ['Ctrl+Alt+T', 'Ctrl+Meta+T'], callback: () => {
+            console.log(`navigating to tree for repository id:>${$repository.id}<`);
+             push('/tree/${$repository.id}');
+            }},
+        { shortcuts: ['Ctrl+Alt+S', 'Ctrl+Meta+S'], callback: () => {
+            console.log(`navigating to stahshes`);
+            push('/stashes');            
+        } }
+    ]
+);
+
+
 
 
 
@@ -421,7 +431,7 @@ function handleGlobalKeydown(e: KeyboardEvent) {
 
 </script>
 
-<svelte:window on:keydown={handleGlobalKeydown} />
+<svelte:window on:keydown={shortcuts} />
 <div>
 
     <span>

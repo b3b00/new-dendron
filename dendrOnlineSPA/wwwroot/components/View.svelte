@@ -164,18 +164,27 @@
 
     const isMoveToEdit = Tools.getShortcutSelector(['Ctrl+Alt+E', 'Ctrl+Meta+E']);
 
-function handleGlobalKeydown(e: KeyboardEvent) {
-    if (isMoveToEdit(e)) {
-        console.log(`navigating to edit for id:>${id}<`);      
-        e.preventDefault();
-        push(`/edit/${id}`);
-    }
-}
+const shortcuts = Tools.setShortcuts(
+    [
+        { shortcuts: ['Ctrl+Alt+E', 'Ctrl+Meta+E'], callback: () => {
+            console.log(`navigating to edit for id:>${id}<`);              
+            push(`/edit/${id}`);
+        } },
+        { shortcuts: ['Ctrl+Alt+T', 'Ctrl+Meta+T'], callback: () => { 
+            console.log(`navigating to tree for repo id:>${$repository.id}<`);
+            push('/tree/${$repository.id}');
+        }},
+        { shortcuts: ['Ctrl+Alt+S', 'Ctrl+Meta+S'], callback: () => {
+            console.log(`navigating to stahshes`);
+            push('/stashes');            
+        } } 
+    ]
+);
 
 
 </script>
 
-<svelte:window on:keydown={handleGlobalKeydown} />
+<svelte:window on:keydown={shortcuts} />
 
 <div style="display:flex; flex-direction: row; flex-wrap: wrap;">
     <div style="display:inline">

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount, getContext } from 'svelte';
     import { StashApi, type StashCategory, type StashNote, searchStashNotesWithExcerpt } from '../../scripts/stashApi';
+    import { repository, noteId } from '../../scripts/dendronStore.js';
     import { StashCache } from '../../scripts/stashCache';
     import CategorySelector from './CategorySelector.svelte';
     import SearchBox from './SearchBox.svelte';
@@ -12,6 +13,7 @@
     import { faSpinner, faSync } from '@fortawesome/free-solid-svg-icons/index.js';
     import { push } from 'svelte-spa-router';
     import type { Note } from '../../scripts/types';
+  import { Tools } from '../../scripts/tools';
 
     let categories: StashCategory[] = [];
     let selectedCategory: StashCategory | null = null;
@@ -26,13 +28,32 @@
     let commandPaletteVisible = false;
     const modal = getContext<Context>('simple-modal');
 
-    function handleGlobalKeydown(e: KeyboardEvent) {
-        if (((e.ctrlKey || e.metaKey) && e.altKey && e.key === 'k')
-        || ((e.ctrlKey || e.metaKey) && e.key === 'k')) {
-            e.preventDefault();
-            commandPaletteVisible = !commandPaletteVisible;
-        }
+
+   const toggleCommandPalette = () => {
+        commandPaletteVisible = !commandPaletteVisible;
     }
+
+    const shortcuts = Tools.setShortcuts(
+        [
+            { shortcuts: ['Ctrl+Alt+K','Ctrl+Meta+K','Ctrl+K','Meta+K'], callback: toggleCommandPalette},
+            { shortcuts: ['Ctrl+Alt+E', 'Ctrl+Meta+E'], callback: () => {
+                if (!$noteId) return;
+                push(`/edit/${$noteId}/`);
+            } }, 
+            { shortcuts: ['Ctrl+Alt+V','Ctrl+Meta+V'], callback: () => {
+                if (!$noteId) return;
+                push(`/view/${$noteId}/`);
+            } },
+            { shortcuts: ['Ctrl+Alt+R', 'Ctrl+Meta+R'], callback: async () => { window.alert('reloading stashes....'); handleReloadAll();} },
+            { shortcuts: ['Ctrl+Alt+T'], callback: () => { push('/tree/${$repository.id}');}} ,
+            { shortcuts: ['Ctrl+Alt+S', 'Ctrl+Meta+S'], callback: () => {
+                console.log(`navigating to stahshes`);
+                push('/stashes');            
+            } }
+        ]
+    )    
+
+   
 
     async function handleNoteSelect(event: CustomEvent<Note>) {
         const note = event.detail;
@@ -335,7 +356,7 @@
     };
 </script>
 
-<svelte:window on:keydown={handleGlobalKeydown} />
+<svelte:window on:keydown={shortcuts} />
 
 <CommandPalette
     searchCallback={(pattern, searchInContent) => searchStashNotesWithExcerpt(pattern, searchInContent, selectedCategory?.id)}

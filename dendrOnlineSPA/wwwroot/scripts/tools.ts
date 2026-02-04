@@ -54,15 +54,34 @@ export const Tools = {
         break;
       }
 
-      return matched;      
+      return matched;
       
     }
 
-    const setShortcuts({shortcut: string, callback() => ()})
+
+
+    
 
 
     return selector;
-  }
+  },
+  
+  setShortcuts : (shortcuts: { shortcuts: string[], callback: () => void }[]): (e: KeyboardEvent) => void => {
+      
+      const selectors: { selector: (e: KeyboardEvent) => boolean, callback: () => void}[] =
+        shortcuts.map(s => ({ selector: Tools.getShortcutSelector(s.shortcuts), callback: s.callback }));
+
+    return (e: KeyboardEvent) => {
+      console.log(`global keydown ctrl:>${e.ctrlKey}<, alt:>${e.altKey}< key:>${e.key}<`, e);
+        e.preventDefault();
+        for (const sc of selectors) {
+           if (sc.selector(e)) {
+             sc.callback();
+             return;
+           } 
+        }
+      }
+    }
 
 
 }

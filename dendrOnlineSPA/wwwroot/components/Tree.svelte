@@ -1,6 +1,6 @@
 <script lang="ts">
 
-    import {repository, isFavoriteRepository, tree, setTree, loadedNotes, getLoadedNote, getCachedNode, cacheNode} from '../scripts/dendronStore.js';
+    import {repository, isFavoriteRepository, tree, setTree, loadedNotes, getLoadedNote, getCachedNode, cacheNode, noteId} from '../scripts/dendronStore.js';
     import { onMount, getContext } from 'svelte';    
     import { StashApi } from '../scripts/stashApi.js';
     import Accordion from "@bolduh/svelte-nested-accordion/src/Accordion.svelte";
@@ -36,12 +36,30 @@
 
     const paletteSelector = Tools.getShortcutSelector(['Ctrl+Alt+K', 'Ctrl+Meta+K', 'Ctrl+K', 'Meta+K']);
 
-    function handleGlobalKeydown(e: KeyboardEvent) {
-        if (paletteSelector(e)) {
-            e.preventDefault();
-            commandPaletteVisible = !commandPaletteVisible;
-        }
+    const toggleCommandPalette = () => {
+        commandPaletteVisible = !commandPaletteVisible;
     }
+
+    const shortcuts = Tools.setShortcuts(
+        [
+            { shortcuts: ['Ctrl+Alt+K','Ctrl+Meta+K','Ctrl+K','Meta+K'], callback: toggleCommandPalette},
+            { shortcuts: ['Ctrl+Alt+E', 'Ctrl+Meta+E'], callback: () => {
+                if (!$noteId) return;
+                push(`/edit/${$noteId}/`);
+            } }, 
+            { shortcuts: ['Ctrl+Alt+V','Ctrl+Meta+V'], callback: () => {
+                if (!$noteId) return;
+                push(`/view/${$noteId}/`);
+            } },
+            { shortcuts: ['Ctrl+Alt+R', 'Ctrl+Meta+R'], callback: async () => { window.alert('reloading tree.... (to come)')} },
+            { shortcuts: ['Ctrl+Alt+T'], callback: () => { push('/tree/${$repository.id}');}} ,
+            { shortcuts: ['Ctrl+Alt+S', 'Ctrl+Meta+S'], callback: () => {
+                console.log(`navigating to stahshes`);
+                push('/stashes');            
+            } }
+        ]
+    )    
+
 
     function handleNoteSelect(event: CustomEvent<Note>) {
         const note = event.detail;
@@ -315,7 +333,7 @@
 
 </script>
 
-<svelte:window on:keydown={handleGlobalKeydown} />
+<svelte:window on:keydown={shortcuts} />
 
 <CommandPalette
     searchCallback={searchNotesWithExcerpt}
