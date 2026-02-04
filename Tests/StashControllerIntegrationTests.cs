@@ -17,7 +17,9 @@ namespace Tests
         {
             // Create a temporary directory for test files
             _testDirectory = Path.Combine(Path.GetTempPath(), "StashTests_" + Guid.NewGuid().ToString());
+            var stashRepo = Path.Combine(_testDirectory, "stashRepo");
             Directory.CreateDirectory(_testDirectory);
+            Directory.CreateDirectory(stashRepo);
             
             _service = new FsStashNotesService(_testDirectory);
         }
@@ -34,6 +36,7 @@ namespace Tests
         [Fact]
         public async Task GetCategories_ShouldReturnEmptyList_WhenNoCategories()
         {
+            _service.SetRepository("stashRepo",100);
             // Act
             var categories = await _service.GetCategoriesAsync();
 
@@ -44,6 +47,7 @@ namespace Tests
         [Fact]
         public async Task CreateCategory_ShouldCreateNewCategory()
         {
+            _service.SetRepository("stashRepo",100);
             // Act
             var category = await _service.CreateCategoryAsync("Test Category", "Test Description");
 
@@ -57,6 +61,7 @@ namespace Tests
         [Fact]
         public async Task CreateCategory_ShouldThrow_WhenTitleIsEmpty()
         {
+            _service.SetRepository("stashRepo",100);
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => 
                 _service.CreateCategoryAsync("", "Description"));
@@ -65,6 +70,7 @@ namespace Tests
         [Fact]
         public async Task GetCategories_ShouldReturnCreatedCategories()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             await _service.CreateCategoryAsync("Category 1", "Desc 1");
             await _service.CreateCategoryAsync("Category 2", "Desc 2");
@@ -81,6 +87,7 @@ namespace Tests
         [Fact]
         public async Task UpdateCategory_ShouldUpdateTitle()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Original Title", "Description");
 
@@ -95,6 +102,7 @@ namespace Tests
         [Fact]
         public async Task UpdateCategory_ShouldUpdateDescription()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Title", "Original Desc");
 
@@ -109,6 +117,7 @@ namespace Tests
         [Fact]
         public async Task GetNotes_ShouldReturnEmptyList_WhenNoNotes()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Test Category", "Description");
 
@@ -122,6 +131,7 @@ namespace Tests
         [Fact]
         public async Task AddNote_ShouldAddNoteToCategory()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Test Category", "Description");
 
@@ -138,6 +148,7 @@ namespace Tests
         [Fact]
         public async Task AddNote_ShouldThrow_WhenContentIsEmpty()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Test Category", "Description");
 
@@ -149,6 +160,7 @@ namespace Tests
         [Fact]
         public async Task GetNotes_ShouldReturnAllNotes()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Test Category", "Description");
             await _service.AddNoteAsync(category.Id, "# Note 1\n\nFirst note");
@@ -168,7 +180,9 @@ namespace Tests
         [Fact]
         public async Task UpdateNote_ShouldUpdateNoteContent()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
+            _service.SetRepository("stashRepo",100);
             var category = await _service.CreateCategoryAsync("Test Category", "Description");
             var note = await _service.AddNoteAsync(category.Id, "Original content");
 
@@ -184,6 +198,7 @@ namespace Tests
         [Fact]
         public async Task UpdateNote_ShouldReturnConflict_WhenHashMismatch()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Test Category", "Description");
             var note = await _service.AddNoteAsync(category.Id, "Original content");
@@ -203,6 +218,7 @@ namespace Tests
         [Fact]
         public async Task DeleteNote_ShouldRemoveNote()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Test Category", "Description");
             var note1 = await _service.AddNoteAsync(category.Id, "Note 1");
@@ -224,6 +240,7 @@ namespace Tests
         [Fact]
         public async Task DeleteNote_ShouldReturnConflict_WhenHashMismatch()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Test Category", "Description");
             var note = await _service.AddNoteAsync(category.Id, "Original content");
@@ -242,6 +259,7 @@ namespace Tests
         [Fact]
         public async Task CategoryExists_ShouldReturnTrue_WhenCategoryExists()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Test Category", "Description");
 
@@ -255,6 +273,7 @@ namespace Tests
         [Fact]
         public async Task CategoryExists_ShouldReturnFalse_WhenCategoryDoesNotExist()
         {
+            _service.SetRepository("stashRepo",100);
             // Act
             var exists = await _service.CategoryExistsAsync("non-existent-id");
 
@@ -265,6 +284,7 @@ namespace Tests
         [Fact]
         public async Task UpdateCategory_ShouldThrow_WhenCategoryNotFound()
         {
+            _service.SetRepository("stashRepo",100);
             // Act & Assert
             await Assert.ThrowsAsync<FileNotFoundException>(() => 
                 _service.UpdateCategoryAsync("non-existent-id", "Title", "Desc"));
@@ -273,6 +293,7 @@ namespace Tests
         [Fact]
         public async Task GetNotes_ShouldThrow_WhenCategoryNotFound()
         {
+            _service.SetRepository("stashRepo",100);
             // Act & Assert
             await Assert.ThrowsAsync<FileNotFoundException>(() => 
                 _service.GetNotesAsync("non-existent-id"));
@@ -281,6 +302,7 @@ namespace Tests
         [Fact]
         public async Task AddNote_ShouldThrow_WhenCategoryNotFound()
         {
+            _service.SetRepository("stashRepo",100);
             // Act & Assert
             await Assert.ThrowsAsync<FileNotFoundException>(() => 
                 _service.AddNoteAsync("non-existent-id", "Content"));
@@ -289,6 +311,7 @@ namespace Tests
         [Fact]
         public async Task UpdateNote_ShouldThrow_WhenInvalidNoteId()
         {
+            _service.SetRepository("stashRepo",100);
             // Arrange
             var category = await _service.CreateCategoryAsync("Test Category", "Description");
 
@@ -300,6 +323,7 @@ namespace Tests
         [Fact]
         public async Task CategoryIdValidation_ShouldThrow_WhenPathTraversal()
         {
+            _service.SetRepository("stashRepo",100);
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => 
                 _service.GetNotesAsync("../etc/passwd"));
@@ -308,6 +332,7 @@ namespace Tests
         [Fact]
         public async Task FullWorkflow_ShouldWork()
         {
+            _service.SetRepository("stashRepo",100);
             // 1. Create category
             var category = await _service.CreateCategoryAsync("My Notes", "Personal notes");
             
