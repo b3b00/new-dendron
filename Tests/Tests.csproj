@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+        <PackageReference Include="GitHubActionsTestLogger" Version="2.0.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
+        <PackageReference Include="NFluent" Version="3.0.0.277-beta" />
+        <PackageReference Include="SharpCoreFileSystem" Version="1.0.4" />
+        <PackageReference Include="xunit" Version="2.4.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
+        <PackageReference Include="coverlet.msbuild" Version="3.2.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+
+        <ItemGroup>      
+            <ProjectReference Include="..\BackEnd\BackEnd.csproj" />
+            <ProjectReference Include="..\dendrOnlineSPA\dendrOnlineSPA.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="data\header\extractheader.md" />
+      <EmbeddedResource Include="data\header\extractheader.md" />
+      <None Remove="data\repository\notes\perso.topic1.item1.md" />
+      <None Remove="data\repository\notes\perso.topic1.item2.md" />
+      <None Remove="data\repository\notes\perso.topic2.item1.md" />
+      <None Remove="data\repository\notes\perso.topic2.item2.md" />
+      <None Remove="data\repository\notes\root.md" />
+      <None Remove="data\modes.md" />
+      <EmbeddedResource Include="data\modes.md" />
+    </ItemGroup>
+
+ 
+
+</Project>

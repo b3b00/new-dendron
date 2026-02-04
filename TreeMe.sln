@@ -1,0 +1,58 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackEnd", "BackEnd\BackEnd.csproj", "{A7EA754E-2F87-438D-B3CA-4B037E38EDD3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{CA26A732-A2FD-44CA-8875-7E7EF55011E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubOAuthMiddleWare", "GitHubOAuthMiddleWare\GitHubOAuthMiddleWare.csproj", "{1C99C402-A02A-4979-B3A9-C2F2970749BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dendrOnlineSPA", "dendrOnlineSPA\dendrOnlineSPA.csproj", "{7C7105CA-FA8F-458D-BD4D-8D94BB11E7B5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "documentation", "documentation", "{9567CB43-EB0D-4D22-A0A5-712BCC50327F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "features", "features", "{35D920CD-D5A8-415E-B191-FC3420F079F1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "stash notes", "stash notes", "{BF409745-3B0E-4802-9F1E-6AA0897EBA04}"
+	ProjectSection(SolutionItems) = preProject
+		documentation\features\stash notes\description.md = documentation\features\stash notes\description.md
+		documentation\features\stash notes\plan.md = documentation\features\stash notes\plan.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{13D432A7-0DE7-48DE-BD11-BAD66758B457}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13D432A7-0DE7-48DE-BD11-BAD66758B457}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13D432A7-0DE7-48DE-BD11-BAD66758B457}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13D432A7-0DE7-48DE-BD11-BAD66758B457}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7EA754E-2F87-438D-B3CA-4B037E38EDD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7EA754E-2F87-438D-B3CA-4B037E38EDD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7EA754E-2F87-438D-B3CA-4B037E38EDD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7EA754E-2F87-438D-B3CA-4B037E38EDD3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA26A732-A2FD-44CA-8875-7E7EF55011E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA26A732-A2FD-44CA-8875-7E7EF55011E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA26A732-A2FD-44CA-8875-7E7EF55011E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA26A732-A2FD-44CA-8875-7E7EF55011E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C99C402-A02A-4979-B3A9-C2F2970749BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C99C402-A02A-4979-B3A9-C2F2970749BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C99C402-A02A-4979-B3A9-C2F2970749BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C99C402-A02A-4979-B3A9-C2F2970749BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C7105CA-FA8F-458D-BD4D-8D94BB11E7B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C7105CA-FA8F-458D-BD4D-8D94BB11E7B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C7105CA-FA8F-458D-BD4D-8D94BB11E7B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C7105CA-FA8F-458D-BD4D-8D94BB11E7B5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{35D920CD-D5A8-415E-B191-FC3420F079F1} = {9567CB43-EB0D-4D22-A0A5-712BCC50327F}
+		{BF409745-3B0E-4802-9F1E-6AA0897EBA04} = {35D920CD-D5A8-415E-B191-FC3420F079F1}
+	EndGlobalSection
+EndGlobal

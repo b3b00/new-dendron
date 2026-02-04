@@ -1,0 +1,163 @@
+﻿using System.Net;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.WebUtilities;
+
+namespace GitHubOAuthMiddleWare;
+
+public static class GitHubOAuthMiddleware
+{
+    
+    public static string AccessToken = "accessToken";
+        
+    public static string TokenType = "tokenType";
+
+    public static string CsrfState = "CSRF:State";
+
+    public class GitHubOptions : OAuthOptions
+    {
+        public string RedirectUri { get; set; }
+        
+        public string ExcludePath { get; set; }
+
+        public override string ToString() {
+            return $@"
+            redirectUri:{RedirectUri}
+            tokenUrl:{TokenEndpoint}
+            AuthorizationEndpoint:{AuthorizationEndpoint}
+            ClientId:{ClientId}
+            ClientSecret:{ClientSecret}
+            ReturnUrlParameter:{ReturnUrlParameter}
+            ExcludePath:{ExcludePath}    
+            ";
+        }
+    }
+
+    public static WebApplication UseGHOAuth(this WebApplication app, Action<GitHubOptions> configuration)
+    {
+        GitHubOptions options = new GitHubOptions();
+        configuration(options);
+        app.Use(async (context, next) =>
+        {
+            if (context.Request.Path.StartsWithSegments(options.ExcludePath))
+            {
+                await next.Invoke();
+                return;
+            }
+            
+            bool existAccessToken = context.Session.TryGetValue(AccessToken, out var accessToken);
+            
+            // Add logging to understand what's happening
+            Console.WriteLine($"[OAuth Middleware] Path: {context.Request.Path}, Has Token: {existAccessToken}, Token Length: {accessToken?.Length ?? 0}");
+            
+            if (!existAccessToken || accessToken == null || accessToken.Length == 0)
+            {
+                if (context.Request.HostAndPath() == options.RedirectUri.Replace("https://","").Replace("http://",""))
+                {
+                    // check if error in query string
+                    // test if coming back from github => get the token => store it in session => redirect to /    
+                    HttpClient client = new HttpClient();
+                    var code = context.Request.Query["code"].First();
+                    var state = context.Request.Query["state"].First();
+                    var tokenUrl = options.TokenEndpoint;
+                    var clientId = options.ClientId;
+                    var clientSecret = options.ClientSecret;
+                    var redirectUri = options.RedirectUri;
+                    var csrf = context.Session.GetString(CsrfState);
+                    
+                    
+                    if (csrf != state)
+                    {
+                        throw new InvalidOperationException("authentication failure : CSRF suspected.");
+                    }
+                    var query =
+                        $"client_id={clientId}&client_secret={clientSecret}&code={code}&redirect_uri={redirectUri}";
+                    
+                    var response = await client.PostAsync(tokenUrl,
+                        new StringContent(query, Encoding.UTF8, "application/x-www-form-urlencoded"));
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        var body = await response.Content.ReadAsStringAsync();
+                        var parameters = QueryHelpers.ParseQuery(body);
+                        if (parameters.TryGetValue("access_token", out var accessTokenValues))
+                        {
+                            context.Session.SetString(AccessToken, accessTokenValues.First());
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException(
+                                $"invalid authentication : missing access token");
+                        }
+                        
+                        if (parameters.TryGetValue("token_type", out var tokenTypeValues))
+                        {
+                            context.Session.SetString(TokenType, tokenTypeValues.First());
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException(
+                                $"inavlid authentication : missing token type");
+                        }
+                        context.Response.Redirect(options.ReturnUrlParameter);
+                        return;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(
+                            $"invalid authentication : {response.StatusCode} - {response.ReasonPhrase}");
+                    }
+                }
+                else
+                {
+                    // Check if this is an API/fetch request using custom header
+                    // X-Dendron-API-Call: Custom header to differentiate API calls from browser navigation
+                    // When present, returns 401 JSON response instead of redirecting to OAuth
+                    // This prevents CORS errors when unauthenticated fetch requests would otherwise follow redirects
+                    // See documentation/API.md for details
+                    var isApiRequest = context.Request.Headers["X-Dendron-API-Call"].Count > 0;
+                    
+                    if (isApiRequest)
+                    {
+                        // Return 401 for API requests instead of redirecting
+                        context.Response.StatusCode = 401;
+                        context.Response.Headers["Content-Type"] = "application/json";
+                        await context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
+                        return;
+                    }
+                    
+                    var authUrl = options.AuthorizationEndpoint;
+                    var clientId = options.ClientId;
+                    var redirectUri = options.RedirectUri;
+                    string csrf = GenerateStatePassword(48);
+                    authUrl =
+                        $"{authUrl}?redirect_uri={redirectUri}&response_type=code&client_id={clientId}&scope=repo&state={csrf}";
+                    context.Session.SetString(CsrfState, csrf);
+                    context.Response.Redirect(authUrl);
+                    return;
+                }
+            }
+
+            await next.Invoke();
+        });
+        return app;
+    }
+
+    private static string GenerateStatePassword(int len)
+    {
+
+        string choices = "abcdefghijklmnopqrstuvwxyz012345679ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        
+        var randomGenerator = RandomNumberGenerator.Create();
+        
+        Random rnd = new Random();
+
+        var bytes = new byte[len];
+        randomGenerator.GetBytes(bytes,0,len);
+        var state = string.Join("", bytes.Select(x => choices[x%choices.Length]));
+        return state;
+    }
+
+}
