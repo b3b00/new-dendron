@@ -11,6 +11,7 @@
     export let commands: PaletteCommandMap = {};
     
     let query = '';
+    let prevQuery = '';
     let results: any[] = [];
     let commandResults: { name: string, arg?: string, description: string, isSuggestion?: boolean, suggestionValue?: string }[] = [];
     let selectedIndex = 0;
@@ -32,20 +33,18 @@
 
     // Debounced search / Command handling
     let searchTimeout: any;
-    $: {
+    function handleInput(_e: Event) {
+        // query is already updated via bind:value
+        console.log('[CommandPalette] Input changed:', query);
         if (query.startsWith('>')) {
             clearTimeout(searchTimeout);
             const fullCommand = query.substring(1);
             const [cmdName, ...argParts] = fullCommand.split(' ');
             const arg = argParts.join(' ');
-            
             const matchedCommands = Object.keys(commands)
                 .filter(name => name.toLowerCase().startsWith(cmdName.toLowerCase()));
-
-            // If we have an exact match and it has suggestions, show suggestions instead of command list
             const exactMatch = matchedCommands.find(name => name.toLowerCase() === cmdName.toLowerCase());
             const command = exactMatch ? commands[exactMatch] : null;
-
             if (command && typeof command !== 'function' && command.suggestions) {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(async () => {
@@ -69,8 +68,6 @@
                         const description = typeof cmd === 'function' ? 'Execute command' : (cmd.description || 'Execute command');
                         return { name: `>${name}`, arg, description };
                     });
-                
-                // Ensure selectedIndex is within bounds
                 if (selectedIndex >= commandResults.length) {
                     selectedIndex = commandResults.length > 0 ? 0 : -1;
                 } else if (selectedIndex === -1 && commandResults.length > 0) {
@@ -80,10 +77,17 @@
             results = [];
         } else if (query.trim().length > 0) {
             commandResults = [];
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                searchNotesBackend(query);
-            }, 300);
+            if (query !== prevQuery) {
+                console.log('[CommandPalette] Searching for:', query, 'Search in content:', searchInContent);
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchNotesBackend(query);
+                }, 300);
+                prevQuery = query;
+            }
+            else {
+                console.log('[CommandPalette] Skipping search, query unchanged:', query);
+            }
         } else {
             results = [];
             commandResults = [];
@@ -111,7 +115,10 @@
     function toggleSearchInContent() {
         searchInContent = !searchInContent;
         if (query.trim().length > 0 && !query.startsWith('>')) {
-            searchNotesBackend(query);
+            if (query !== prevQuery) {
+                searchNotesBackend(query);
+                prevQuery = query;
+            }
         }
     }
 
@@ -126,50 +133,39 @@
     export function greatestCommonPrefix(arr: string[]): string {
     if (!arr || arr.length === 0) return "";
     if (arr.length === 1) return arr[0] ?? "";
-    console.log(`greatestCommonPrefix(${arr})`);    
     // Sort lexicographically
     const sorted = [...arr].sort();
-    console.log(`  sorted: ${sorted}`);
     const first = sorted[0];
     const last = sorted[sorted.length - 1];
-    console.log(`  first: >${first}<, last: >${last}<`);
 
     let i = 0;
     const limit = Math.min(first.length, last.length);
-    console.log(`  limit: ${limit}`);
     
     let prefix = '';
     while (i < limit && first[i] == last[i]) {
         prefix += first[i];
-        console.log(`${first[i]} == ${last[i]} => ${prefix}`);
         i++;
     } 
-    console.log(`  common prefix length: ${i} => >${first.slice(0, i)}<`);    
     return first.slice(0, i);
     }
 
 
     function getGreatestCommonPrefix(strings: string[]): string {
-        console.log(`getGreatestCommonPrefix(${strings})`);
         if (strings.length === 0) return '';
         let prefix = strings[0];
         for (let i = 1; i < strings.length; i++) {
-            console.log(`computing prefix #${i}(${strings[i]}): current prefix >${prefix}<`);
             while (strings[i].indexOf(prefix) !== 0) {
 
                 prefix = prefix.substring(0, prefix.length - 1);
                 if (prefix === '') {
-                    console.log(`failing to find prefix >${prefix}< for >${strings[i]}< => empty prefix`);
                     return '';
                 }
             }
         }
-        console.log(`getGreatestCommonPrefix(${strings}) = ${prefix}`);
         return prefix;
     }
 
     function handleKeydown(e: KeyboardEvent) {
-        console.log(`handleKeydown(${e.key})`);
         if (e.key === 'Escape') {
             close();
         } else if (e.key === 'ArrowDown') {
@@ -201,7 +197,6 @@
             }                     
         } 
         else if (e.key === 'Enter' && query !== undefined && query !== null && query != '' && query.startsWith('>')) { // TODO : check is free text allowed
-            console.log(`free text input => query = >${query}<`,commandResults,selectedIndex);
             // get the command name
             let cmdName = query.substring(1);
             const cmdIndex = query.indexOf(' ');
@@ -218,7 +213,6 @@
                 }
 
                 if (isPaletteCommand(cmd) && cmd.allowFreeText) {
-                    console.log(`Executing command ${cmdName} with arg ${arg}`);
                     if (typeof cmd === 'function') {
                         cmd(arg);
                         close();
@@ -236,7 +230,6 @@
                 e.preventDefault();
                 const labels = commandResults.map(c => c.name);
                 const gcp = greatestCommonPrefix(labels);
-                console.log(`Tab pressed: GCP among ${labels.length} labels is >${gcp}<`);
                 if (gcp) {
                     const firstSpaceIndex = query.indexOf(' ');
                     if (firstSpaceIndex !== -1) {
@@ -319,6 +312,7 @@
                 <input
                     bind:this={inputElement}
                     bind:value={query}
+                    on:input={handleInput}
                     on:keydown={handleKeydown}
                     placeholder="Search notes or type '>' for commands..."
                     type="text"
@@ -446,22 +440,6 @@
         color: #888;
         display: flex;
         align-items: center;
-    }
-
-    input {
-        flex: 1;
-        background: transparent;
-        border: none;
-        color: white;
-        font-size: 1.1rem;
-        outline: none;
-    }
-
-    .close-btn {
-        background: transparent;
-        border: none;
-        color: #888;
-        cursor: pointer;
     }
 
     .close-btn:hover {

@@ -43,7 +43,7 @@
     const shortcuts = Tools.setShortcuts(
         [
             { shortcuts: ['Ctrl+Alt+K','Ctrl+Meta+K','Ctrl+K','Meta+K'], callback: toggleCommandPalette},
-            { shortcuts: ['Ctrl+Alt+E', 'Ctrl+Meta+E'], callback: () => {
+            { shortcuts: ['Ctrl+Alt+E', 'Ctrl+Meta+E', 'AltGraph+E'], callback: () => {
                 if (!$noteId) return;
                 push(`/edit/${$noteId}/`);
             } }, 
@@ -54,7 +54,6 @@
             { shortcuts: ['Ctrl+Alt+R', 'Ctrl+Meta+R'], callback: async () => { window.alert('reloading tree.... (to come)')} },
             { shortcuts: ['Ctrl+Alt+T'], callback: () => { push('/tree/${$repository.id}');}} ,
             { shortcuts: ['Ctrl+Alt+S', 'Ctrl+Meta+S'], callback: () => {
-                console.log(`navigating to stahshes`);
                 push('/stashes');            
             } }
         ]
@@ -88,7 +87,6 @@
     let abortController: AbortController | null = null;
 
     async function searchNotesBackend(query: string, searchInContent: boolean): Promise<Note[]> {
-        console.log(`searchNotesBackend called with query=${query} searchInContent=${searchInContent} in ${currentRepository.id}`);
         if (!currentRepository?.id || !query || query.length < 3) return [];
 
         if (abortController) {
@@ -97,7 +95,6 @@
         abortController = new AbortController();
 
         const url = `/notes/${currentRepository.id}/search?pattern=${encodeURIComponent(query)}&searchInContent=${searchInContent}`;
-        console.log(`[Tree] searchNotesBackend fetching from: ${url}`);
         
         try {
             const resp = await fetch(url, {
@@ -105,14 +102,11 @@
             });
             if (resp.ok) {
                 const results = await resp.json();
-                console.log(`[Tree] searchNotesBackend success. Found ${results.length} matches.`);
                 return results;
             } else {
-                console.error(`[Tree] searchNotesBackend failed with status: ${resp.status}`);
             }
         } catch (e: any) { 
             if (e.name !== 'AbortError') {
-                console.error('[Tree] searchNotesBackend fetch error:', e); 
             }
         }
         return [];
@@ -172,7 +166,6 @@
     }
 
     $: {
-        console.log('reactive statement : refreshing tree',$tree);
         currentTree = $tree;
     }
 
@@ -194,14 +187,11 @@
             $tree = cachedRoot;
             currentTree = $tree;
             loading = false;
-            console.log('Loaded root node from cache');
         } else if (currentTree === null || currentTree === undefined || !currentTree.hasOwnProperty('name') || refresh) {
-            console.log('loading root node from BackEnd');
             loading = true;
             // Fetch hierarchy and metadata (but skip full contents for speed)
             const dendron = await DendronClient.GetDendron(currentRepository.id, false);
             loading = false;
-            console.log('Backend response is ', dendron);
             if (dendron.isOk) {
                 $isFavoriteRepository = dendron.theResult.isFavoriteRepository;
                 // Only set root node, children will be loaded lazily
@@ -212,12 +202,7 @@
                 cacheNode(rootNode);
                 $loadedNotes = [];
                 // Optionally: load stashes after repository context is established
-                const stashes = await StashApi.getCategoriesWithNotes(true);
-                if (stashes.isOk) {
-                    console.log(`Stashes loaded: ${stashes.theResult?.length || 0} categories`);
-                } else {
-                    console.warn('Failed to load stashes:', stashes.errorMessage);
-                }
+                const stashes = await StashApi.getCategoriesWithNotes(true);                
             } else {
                 $isFavoriteRepository = false;
                 $repository = undefined;

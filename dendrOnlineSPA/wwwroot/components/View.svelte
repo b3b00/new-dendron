@@ -167,15 +167,12 @@
 const shortcuts = Tools.setShortcuts(
     [
         { shortcuts: ['Ctrl+Alt+E', 'Ctrl+Meta+E'], callback: () => {
-            console.log(`navigating to edit for id:>${id}<`);              
             push(`/edit/${id}`);
         } },
         { shortcuts: ['Ctrl+Alt+T', 'Ctrl+Meta+T'], callback: () => { 
-            console.log(`navigating to tree for repo id:>${$repository.id}<`);
-            push('/tree/${$repository.id}');
+            push(`/tree/${$repository.id}`);
         }},
         { shortcuts: ['Ctrl+Alt+S', 'Ctrl+Meta+S'], callback: () => {
-            console.log(`navigating to stahshes`);
             push('/stashes');            
         } } 
     ]

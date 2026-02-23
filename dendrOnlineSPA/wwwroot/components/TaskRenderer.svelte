@@ -40,27 +40,19 @@ let toggle = async () => {
     
     if (context.type === 'stash' && context.categoryId) {
         // Handle stash note toggling
-        console.log('TaskRenderer: Toggling stash note checkbox', { text, id, noteId });
         const notesResult = await StashApi.getNotes(context.categoryId);
         if (!notesResult.isOk || !notesResult.theResult) {
-            console.error('TaskRenderer: Failed to get notes', notesResult.errorMessage);
             modal.open(ErrorDialog, { message: notesResult.errorMessage });
             return;
         }
         
-        console.log('TaskRenderer: Got notes, looking for noteId:', noteId, 'in', notesResult.theResult.length, 'notes');
-        console.log('TaskRenderer: Available note IDs:', notesResult.theResult.map(n => n.id));
         const note = notesResult.theResult.find(n => n.id === noteId);
         if (note) {
-            console.log('TaskRenderer: Found note, toggling content');
             let content = await TaskToggler.Toggle(text, id, note.content);
-            console.log('TaskRenderer: Sending update to server');
             const result = await StashApi.updateNote(context.categoryId, noteId, content);
             if (!result.isOk) {
-                console.error('TaskRenderer: Update failed', result.errorMessage);
                 modal.open(ErrorDialog, { message: result.errorMessage });
             } else {
-                console.log('TaskRenderer: Update successful, refreshing note');
                 if (context.onNoteUpdated) {
                     // Notify parent component to refresh note content
                     await context.onNoteUpdated();

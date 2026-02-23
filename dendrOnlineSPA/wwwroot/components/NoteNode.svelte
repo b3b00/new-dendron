@@ -99,7 +99,6 @@
     }
     
     const onDeletionOkay = async (deleteChildren) => {
-        console.log(`onDeletionOkay(${deleteChildren})`,$repository,data);
         let recurse = false;
         if (deleteChildren === undefined || deleteChildren === null || deleteChildren === false) {
             recurse = false;
@@ -110,15 +109,11 @@
         deleteNote(data.id, recurse);
         unDraft(data.id);
         unloadNote(data.id);
-        console.log(`call client.deleteNote(${$repository.id},${data.id},${recurse})`);
         let newTree = await DendronClient.DeleteNote($repository.id,data.id,recurse)
-        console.log('client returned',newTree);
         if (newTree.isOk) {
-            console.log('setting new tree');
             setTree(newTree.theResult);
         }
         else {
-            console.log(`opening error dialog with ${newTree.errorMessage}`);
             modal.open(
             ErrorDialog,
             {
@@ -133,7 +128,6 @@
     }
     
     const onDeletionCancel = () => {
-        console.log('deletion has been canceled');
     }
     const showCreationDialog = (data) => {
         modal.open(

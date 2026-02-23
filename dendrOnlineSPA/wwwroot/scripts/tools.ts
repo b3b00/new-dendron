@@ -3,7 +3,6 @@
 export const Tools = {
 
   isCtrlAlt(k: string, e: KeyboardEvent): boolean {
-    console.log(`edit keydown ctrl:>${e.ctrlKey}<, alt:>${e.altKey}< key:>${e.key}<`, e);
 
 
     const hasCtrl = e.ctrlKey;
@@ -39,7 +38,7 @@ export const Tools = {
 
     
     const selector = (e: KeyboardEvent) => {
-      
+      ;
       let matched = false;
 
       for (const shortcut of shortcutCombinaisions) {
@@ -53,7 +52,6 @@ export const Tools = {
         matched = true;
         break;
       }
-
       return matched;
       
     }
@@ -72,16 +70,15 @@ export const Tools = {
         shortcuts.map(s => ({ selector: Tools.getShortcutSelector(s.shortcuts), callback: s.callback }));
 
     return (e: KeyboardEvent) => {
-      console.log(`global keydown ctrl:>${e.ctrlKey}<, alt:>${e.altKey}< key:>${e.key}<`, e);
-        e.preventDefault();
-        for (const sc of selectors) {
-           if (sc.selector(e)) {
-             sc.callback();
-             return;
-           } 
+      for (const sc of selectors) {
+        if (sc.selector(e)) {
+          e.preventDefault();
+          sc.callback();
+          return;
         }
       }
     }
+  }
 
 
 }
