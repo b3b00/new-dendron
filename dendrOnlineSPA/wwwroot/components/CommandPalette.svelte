@@ -35,7 +35,7 @@
     let searchTimeout: any;
     function handleInput(_e: Event) {
         // query is already updated via bind:value
-        console.log('[CommandPalette] Input changed:', query);
+        //console.log('[CommandPalette] Input changed:', query);
         if (query.startsWith('>')) {
             clearTimeout(searchTimeout);
             const fullCommand = query.substring(1);
