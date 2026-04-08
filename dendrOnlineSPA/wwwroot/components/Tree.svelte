@@ -45,6 +45,7 @@
             { shortcuts: ['Ctrl+Alt+K','Ctrl+Meta+K','Ctrl+K','Meta+K'], callback: toggleCommandPalette},
             { shortcuts: ['Ctrl+Alt+E', 'Ctrl+Meta+E', 'AltGraph+E'], callback: () => {
                 if (!$noteId) return;
+                console.log(`move to edit view for :>${$noteId}<`);
                 push(`/edit/${$noteId}/`);
             } }, 
             { shortcuts: ['Ctrl+Alt+V','Ctrl+Meta+V'], callback: () => {

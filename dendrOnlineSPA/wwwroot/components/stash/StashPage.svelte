@@ -12,8 +12,11 @@
     import Fa from 'svelte-fa/src/fa.svelte';
     import { faSpinner, faSync } from '@fortawesome/free-solid-svg-icons/index.js';
     import { push } from 'svelte-spa-router';
-    import type { Note } from '../../scripts/types';
+    import type { Note, Node } from '../../scripts/types';
   import { Tools } from '../../scripts/tools';
+    import AutocompletePromptDialog from '../AutocompletePromptDialog.svelte';
+    import { DendronClient } from '../../scripts/dendronClient';
+    import { tree } from '../../scripts/dendronStore.js';
 
     let categories: StashCategory[] = [];
     let selectedCategory: StashCategory | null = null;
@@ -28,6 +31,19 @@
     let commandPaletteVisible = false;
     const modal = getContext<Context>('simple-modal');
 
+    const getDescendanceNames = (node: Node): string[] => {
+        let names: string[] = [];
+        if (!node) return names;
+        if (node.name && node.name !== 'root') {
+            names.push(node.name);
+        }
+        if (node.children && node.children.length > 0) {
+            for (const child of node.children) {
+                names.push(...getDescendanceNames(child));
+            }
+        }
+        return names;
+    }
 
    const toggleCommandPalette = () => {
         commandPaletteVisible = !commandPaletteVisible;
@@ -261,6 +277,129 @@
 
     // Use StashApi.searchStashNotesWithExcerpt for search callback
     $: stashCommands = {
+        'promote': {
+            action: async (noteId) => {
+                if (!selectedCategory || !noteId) return;
+                
+                const stashNote = notes.find(n => n.id === noteId);
+                if (!stashNote) return;
+
+                const noteTitle = stashNote.title || noteId;
+                
+                if (!$repository || !$repository.id) {
+                    showError('No repository selected. Please return to the Repositories page and select one.');
+                    return;
+                }
+
+                let allTreeNotes = [];
+                if (!$tree) {
+                    const dendron = await DendronClient.GetDendron($repository.id, false);
+                    if (dendron.isOk) {
+                        $tree = dendron.theResult.hierarchy;
+                    }
+                }
+
+                if ($tree) {
+                    allTreeNotes = getDescendanceNames($tree);
+                }
+
+                modal.open(
+                    AutocompletePromptDialog,
+                    {
+                        message: `Promote stash note '${noteTitle}' to tree note:`,
+                        parent: noteTitle,
+                        items: allTreeNotes,
+                        onOkay: async (targetNoteName) => {
+                            if (!targetNoteName) return;
+                            
+                            const doPromote = async () => {
+                                // create new note from stash content
+                                const newNote = {
+                                    header : {
+                                        name: targetNoteName,
+                                        id: targetNoteName,
+                                        description: stashNote.title || targetNoteName,
+                                        title: targetNoteName,
+                                        lastUpdatedTS: 0,
+                                        createdTS: 0,
+                                    },
+                                    sha: null,
+                                    body: stashNote.content,
+                                };
+                                
+                                // save the note to backend
+                                const saveResult = await DendronClient.SaveNote($repository.id, newNote);
+                                
+                                if (saveResult.isOk) {
+                                    // Refresh the store's tree using SaveNote's returned hierarchy
+                                    $tree = saveResult.theResult.hierarchy;
+
+                                    // successfully saved, now delete the stash note
+                                    const deleteResult = await StashApi.deleteNote(selectedCategory.id, stashNote.id);
+                                    if (deleteResult.isOk) {
+                                        await handleNoteDeleted();
+                                        showSuccess(`Stash note promoted to '${targetNoteName}' successfully.`);
+                                        push(`/view/${targetNoteName}`);
+                                    } else {
+                                        showWarning(`Note '${targetNoteName}' created, but failed to delete the stash note: ${deleteResult.errorMessage}`);
+                                        push(`/view/${targetNoteName}`);
+                                    }
+                                } else {
+                                    showError(`Failed to create tree note: ${saveResult.errorMessage}`);
+                                }
+                            };
+
+                            if (allTreeNotes.includes(targetNoteName)) {
+                                const shortTitle = targetNoteName.substring(targetNoteName.lastIndexOf('.') + 1);
+                                modal.open(
+                                    ConfirmDialog,
+                                    {
+                                        message: `Are you sure?`,
+                                        detail: `The existing note <b>${shortTitle}</b> will be completely replaced.`,
+                                        onCancel: () => {},
+                                        onOkay: async () => {
+                                            await doPromote();
+                                        }
+                                    },
+                                    {
+                                        closeButton: true,
+                                        closeOnEsc: true,
+                                        closeOnOuterClick: true,
+                                    }
+                                );
+                            } else {
+                                await doPromote();
+                            }
+                        }
+                    },
+                    {
+                        closeButton: true,
+                        closeOnEsc: true,
+                        closeOnOuterClick: true,
+                    }
+                );
+            },
+            description: 'Promote a stash note to a tree note',
+            suggestions: async (arg) => {
+                if (!selectedCategory) {
+                    showError('A category must be selected to promote notes');
+                    return [];
+                }
+                const filteredNotes = arg 
+                    ? notes.filter(n => 
+                        (n.title && n.title.toLowerCase().includes(arg.toLowerCase())) || 
+                        (n.content && n.content.toLowerCase().includes(arg.toLowerCase()))
+                      )
+                    : notes;
+
+                return filteredNotes.map(n => ({
+                    label: n.title || n.id,
+                    value: n.id,
+                    description: n.content.substring(0, 50) + (n.content.length > 50 ? '...' : '')
+                }));
+            },
+            suggestionsDescription: 'Select a stash note to promote'
+        },
         'reloadAll': {
             action: () => handleReloadAll(),
             description: 'Reload all categories and notes from server'

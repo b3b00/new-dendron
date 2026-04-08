@@ -1,6 +1,7 @@
 <script>
     import { getContext } from 'svelte';
     export let message;
+    export let detail = null;
     
     export let option;
     
@@ -32,6 +33,13 @@
         text-align: center;
     }
 
+    p {
+        font-size: 1.1rem;
+        text-align: center;
+        margin-bottom: 20px;
+        margin-top: 5px;
+    }
+
     .buttons {
         display: flex;
         justify-content: space-between;
@@ -39,6 +47,10 @@
 </style>
 
 <h2>{@html message}</h2>
+{#if detail}
+    <p>{@html detail}</p>
+{/if}
+
 {#if option}
     <div style="display: flex;flex-direction: row">
         <label for="opt">{option}</label>
